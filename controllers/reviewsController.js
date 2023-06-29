@@ -92,7 +92,6 @@ const updateReview = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Review not found.'})
   }
   
-  // const { reviewId, ...otherProperties } = req.body
   
   
   // If rating was chaged, then freelancer's overallRating must change.
