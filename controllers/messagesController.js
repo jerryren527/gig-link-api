@@ -71,7 +71,7 @@ const createNewMessage = asyncHandler(async (req, res) => {
     await User.updateOne({ _id: recipient}, { $push: { receivedMessages: createdMessage}})
     
 
-    return res.status(201).json({ message: `New message for \'${recipient}\' created.`})
+    return res.status(201).json({ message: `New message (${createdMessage._id}) for \'${recipient}\' created.`})
   } else {
     return res.status(400).json({ message: 'Invalid message data received.'})
   }
