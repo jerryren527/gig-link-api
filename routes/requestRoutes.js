@@ -5,7 +5,10 @@ const requestsController = require('../controllers/requestsController')
 router.route('/')
   .get(requestsController.getAllRequests)
   .post(requestsController.createNewRequest)
-  .patch(requestsController.updateRequest)
+  .put(requestsController.updateRequest)
   .delete(requestsController.deleteRequest)
+
+router.route('/status')
+  .patch(requestsController.updateRequestStatus)
 
 module.exports = router
