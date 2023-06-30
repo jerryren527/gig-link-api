@@ -8,4 +8,7 @@ router.route('/')
   // .patch(proposalsController.updateProposal) // freelancer cannot edit a proposal
   .delete(proposalsController.deleteProposal)
 
+
+router.route('/status')
+  .patch(proposalsController.changeProposalStatus)
 module.exports = router
