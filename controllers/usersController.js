@@ -1,6 +1,7 @@
 const User = require('../models/User')
 const asyncHandler = require('express-async-handler')   // prevents us from using so many try-catch blocks when using asyn methods
 const bcrypt = require('bcrypt')
+const Message = require('../models/Message')
 
 
 // @desc Get all users
@@ -14,6 +15,20 @@ const getAllUsers = asyncHandler(async (req, res) => {
   }
 
   res.json(users)
+})
+
+// @desc Get a user
+// @route GET /users/:userid
+// @access Private
+const getUser = asyncHandler(async (req, res) => {
+  const userId = req.params.userId
+  const user = await User.findOne({ userId }).lean().exec()
+
+  if (!user) {
+    return res.status(400).json({ message: "No users found"})
+  }
+
+  res.json(user)
 })
 
 // @desc Create new user
@@ -47,17 +62,17 @@ const createNewUser = asyncHandler(async (req, res) => {
 })
 
 // @desc Update a user
-// @route PATCH /users
+// @route PUT /users
 // @access Private
 const updateUser = asyncHandler(async (req, res) => {
-  const { id, username, password, role} = req.body
+  const { username, password, role} = req.body
 
-  if (!id || !username || !role) {
-    res.status(400).json({ message: 'All fields expect password are required.'})
+  if (!req.body.id || !username || !role) {
+    res.status(400).json({ message: 'Username and role are required.'})
   }
 
   // no .lean() here because we want access to .save() method.
-  const user = await User.findById(id).exec()
+  const user = await User.findById(req.body.id).exec()
 
   if (!user) {
     res.status(400).json({ message: 'User not found.'})
@@ -65,12 +80,13 @@ const updateUser = asyncHandler(async (req, res) => {
 
   const duplicate = await User.findOne({ username }).lean().exec()
 
-  if (duplicate && duplicate?._id.toString() !== id) {
+  if (duplicate && duplicate?._id.toString() !== req.body.id) {
     res.status(409).json({ message: 'Duplicate username'})
   }
 
-  user.username = username
-  user.role = role
+  const { id, ...otherProperties } = req.body
+
+  Object.assign(user, { ...user, ...otherProperties})
 
   if (password) {
     user.password = await bcrypt.hash(password, 10)
@@ -80,6 +96,33 @@ const updateUser = asyncHandler(async (req, res) => {
 
   res.json({ message: `${updatedUser.username} updated`})
 })
+
+// @desc Removes a message from User.sentMessages or User.receivedMessages
+// @route PATCH /users/inbox
+// @access Private
+const deleteMessage = asyncHandler(async (req, res) => {
+  const { userId, messageId } = req.body
+
+  // check if message is a sent message or a received message
+  // const user = await User.findById(userId).exec()
+  const message = await Message.findById(messageId).exec()
+  let result
+  let messageType
+  if (message.sender === userId) {
+    messageType = 'Sent'
+    result = await User.updateOne({ _id: userId }, { $pull: { sentMessages: messageId }})
+  } else {
+    messageType = 'Received'
+    result = await User.updateOne({ _id: userId }, { $pull: { receivedMessages: messageId }})
+  }
+  
+  if (result.modifiedCount === 0) {
+    return res.status(204)
+  } 
+  return res.status(200).json({ message: `User ${userId}'s ${messageType} Message ${messageId} deleted.`})
+})
+
+
 
 
 // @desc Delete a user
@@ -105,7 +148,9 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 module.exports = {
   getAllUsers,
+  getUser,
   createNewUser,
+  deleteMessage,
   updateUser,
   deleteUser
 }

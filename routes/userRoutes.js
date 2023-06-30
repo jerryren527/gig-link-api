@@ -5,7 +5,14 @@ const usersController = require('../controllers/usersController')
 router.route('/')
   .get(usersController.getAllUsers)
   .post(usersController.createNewUser)
-  .patch(usersController.updateUser)
+  .put(usersController.updateUser)
   .delete(usersController.deleteUser)
   
+router.route('/inbox')
+  .patch(usersController.deleteMessage)
+
+  
+router.route('/:userId')
+  .get(usersController.getUser)
+
 module.exports = router
