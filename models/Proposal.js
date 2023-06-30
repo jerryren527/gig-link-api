@@ -1,11 +1,6 @@
 const mongoose = require('mongoose')
 
 const proposalSchema = new mongoose.Schema({
-  client: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
   freelancer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
