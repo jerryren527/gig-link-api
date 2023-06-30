@@ -130,6 +130,7 @@ const seedData = async () => {
     kirkland.clientReviews = [...kirkland.clientReviews, kirklandReview._id]
     await kirkland.save()
 
+
     console.log('Seed data inserted successfully.');
   } catch (error) {
     console.error('Error seeding data:', error);
