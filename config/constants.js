@@ -11,9 +11,15 @@ const REQUEST_STATUSES = {
   Declined: 'Declined',
 }
 
+const PROPOSAL_STATUSES = {
+  Pending: 'Pending',
+  Accepted: 'Accepted',
+  Declined: 'Declined',
+}
+
 const ROLES = {
   Client: "Client",
   Freelancer: "Freelancer"
 }
 
-module.exports = {JOB_STATUSES, REQUEST_STATUSES, ROLES}
+module.exports = {JOB_STATUSES, REQUEST_STATUSES, PROPOSAL_STATUSES, ROLES}
