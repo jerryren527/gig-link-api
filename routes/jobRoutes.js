@@ -5,7 +5,13 @@ const jobsController = require('../controllers/jobsController')
 router.route('/')
   .get(jobsController.getAllJobs)
   .post(jobsController.createNewJob)
-  .patch(jobsController.updateJob)
+  .put(jobsController.updateJob)
   .delete(jobsController.deleteJob)
+
+router.route('/status')
+  .patch(jobsController.updateJobStatus)
+
+// router.route('/proposals')
+//   .patch(jobsController.addJobProposal)
 
 module.exports = router
