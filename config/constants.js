@@ -19,7 +19,8 @@ const PROPOSAL_STATUSES = {
 
 const ROLES = {
   Client: "Client",
-  Freelancer: "Freelancer"
+  Freelancer: "Freelancer",
+  Admin: "Admin"
 }
 
 module.exports = {JOB_STATUSES, REQUEST_STATUSES, PROPOSAL_STATUSES, ROLES}
