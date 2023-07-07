@@ -7,6 +7,19 @@ const User = require('../models/User')
 
 
 // @desc Get all messages
+// @route GET /messages
+// @access Private
+const getAllMessages = asyncHandler(async (req, res) => {
+  const messages = await Message.find().lean()
+
+  if (!messages?.length) {
+    return res.status(400).json({ message: "No messages found"})
+  }
+
+  res.json(messages)
+})
+
+// @desc Get all messages
 // @route GET /messages/sent
 // @access Private
 // const getSentMessages = asyncHandler (async (req, res) => {
@@ -42,14 +55,14 @@ const User = require('../models/User')
 // @route POST /messages
 // @access Private
 const createNewMessage = asyncHandler(async (req, res) => {
-  const {title, body, sender, recipient, date} = req.body
+  const {title, body, sender, senderUsername, recipient, recipientUsername, date} = req.body
 
-  if (!title || !body || !sender || !recipient || !date) {
-    return res.status(400).json({ message: "Title, Body, Sender, Recipient, Date are required."})    
+  if (!title || !body || !senderUsername || !recipientUsername ) {
+    return res.status(400).json({ message: "Title, Body, Sender, Recipient are required."})    
   }
 
   // Make sure that sender and recipient are not the same User
-  if (sender.toString() === recipient.toString()) {
+  if (senderUsername === recipientUsername) {
     return res.status(409).json({ message: "Sender and recipient must not be the same user."})
   }
 
@@ -61,14 +74,16 @@ const createNewMessage = asyncHandler(async (req, res) => {
     // const senderObject = await User.findById(sender).exec()
     // senderObject.sentMessages = [...senderObject.sentMessages, createdMessage]
     // await senderObject.save()
-    await User.updateOne({ _id: sender}, { $push: { sentMessages: createdMessage}})
+    // await User.updateOne({ _id: sender}, { $push: { sentMessages: createdMessage}})
+    await User.updateOne({ username: senderUsername}, { $push: { sentMessages: createdMessage}})
 
     
     // add message to recipient's receivedMessages
     // const recipientObject = await User.findById(recipient).exec()
     // recipientObject.receivedMessages = [...recipientObject.receivedMessages, createdMessage]
     // await recipientObject.save()
-    await User.updateOne({ _id: recipient}, { $push: { receivedMessages: createdMessage}})
+    // await User.updateOne({ _id: recipient}, { $push: { receivedMessages: createdMessage}})
+    await User.updateOne({ username: recipientUsername}, { $push: { receivedMessages: createdMessage}})
     
 
     return res.status(201).json({ message: `New message (${createdMessage._id}) for \'${recipient}\' created.`})
@@ -79,5 +94,6 @@ const createNewMessage = asyncHandler(async (req, res) => {
 
 
 module.exports = {
+  getAllMessages,
   createNewMessage,
 }

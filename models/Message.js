@@ -12,17 +12,22 @@ const MessageSchema = new mongoose.Schema({
   sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+  },
+  senderUsername: {
+    type: String,
     required: true
   },
   recipient: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+  },
+  recipientUsername: {
+    type: String,
+    required: true,
   },
   date: {
     type: Date,
     default: new Date(Date.now()),
-    required: true
   },
 })
 
