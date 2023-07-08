@@ -22,14 +22,14 @@ const getAllJobs = asyncHandler (async (req, res) => {
 // @route POST /jobs
 // @access Private
 const createNewJob = asyncHandler(async (req, res) => {
-  const {title, description, client, skills, price, startDate, dueDate } = req.body
+  const {title, description, client, clientUsername, skills, price, startDate, dueDate } = req.body
 
-  if (!title || !description || !client || !price) {
-    res.status(400).json({ message: "Title, Description, Client, and Price are required."})
+  if (!title || !description || !clientUsername || !price) {
+    res.status(400).json({ message: "Title, Description, Client, Client Username, and Price are required."})
   }
 
   // check for duplicate requests
-  const duplicate = await Job.findOne({ title: title, description: description, client: client, price: price }).lean().exec()
+  const duplicate = await Job.findOne({ title: title, description: description, clientUsername: clientUsername, price: price }).lean().exec()
 
   if (duplicate) {
     return res.status(409).json({ message: "Duplicate job."})
@@ -39,6 +39,7 @@ const createNewJob = asyncHandler(async (req, res) => {
     title,
     description,
     client,
+    clientUsername,
     skills,
     price,
     startDate,
@@ -49,7 +50,7 @@ const createNewJob = asyncHandler(async (req, res) => {
 
   if (job) {
     // add job to client's User.openJobs
-    await User.updateOne({ _id: client }, { $push: { openJobs: job }})
+    await User.updateOne({ username: clientUsername }, { $push: { openJobs: job }})
 
     res.status(201).json({ message: `New job \'${title}\' created.`})
   } else {
@@ -80,7 +81,9 @@ const updateJob = asyncHandler(async (req, res) => {
   } 
   if (job.status === JOB_STATUSES.Pending) {
     if (status && status !== JOB_STATUSES.Accepted) {
-      return res.status(409).json({ message: `Job with status Pending cannot be updated to ${status}. Its status can only be updated to Accepted.`})
+      if (status !== JOB_STATUSES.Pending) {
+        return res.status(409).json({ message: `Job with status Pending cannot be updated to ${status}. Its status can only be updated to Accepted.`})
+      }
     }
   } 
   if (job.status === JOB_STATUSES.Accepted) {

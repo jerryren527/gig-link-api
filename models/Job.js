@@ -11,12 +11,18 @@ const jobSchema = new mongoose.Schema({
   },
   client: {
     type: mongoose.Schema.Types.ObjectId,
-    required: true,
     ref: 'User'
+  },
+  clientUsername: {
+    type: String,
+    required: true,
   },
   freelancer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  freelancerUsername: {
+    type: String,
   },
   skills: {
     type: [String],
