@@ -123,7 +123,7 @@ const deleteReview = asyncHandler(async (req, res) => {
   const { reviewId } = req.body
 
   if (!reviewId) {
-    return req.status(400).json({ message: 'Review ID required.'})
+    return res.status(400).json({ message: 'Review ID required.'})
   }
 
   const review = await Review.findById(reviewId).exec()
@@ -136,21 +136,33 @@ const deleteReview = asyncHandler(async (req, res) => {
 
   // Remove review from freelancer's User.freelancerReview
   const freelancerObject = await User.findById(review.freelancer).exec()
+  console.log("🚀 ~ file: reviewsController.js:139 ~ deleteReview ~ freelancerObject:", freelancerObject)
 
-  freelancerObject.freelancerReviews = freelancerObject.freelancerReviews.filter(review => review !== reviewId )
   
   // Update freelancer's User.overallRating
   const numOfRatings = freelancerObject.freelancerReviews.length
-  const overallRating = freelancerObject.overallRating ? freelancerObject.overallRating : 0
-  const newOverallRating = ( overallRating * numOfRatings - review.rating ) / (numOfRatings - 1)
+  console.log("🚀 ~ file: reviewsController.js:146 ~ deleteReview ~ numOfRatings:", numOfRatings)
+  const overallRating = freelancerObject.overallRating ? +freelancerObject.overallRating : 0
+  let newOverallRating
+  if (numOfRatings === 1) {
+    newOverallRating = null
+  } else {
+    newOverallRating = ( overallRating * numOfRatings - review.rating ) / (numOfRatings - 1)
+  }
+  console.log("🚀 ~ file: reviewsController.js:146 ~ deleteReview ~ newOverallRating:", newOverallRating)
+  console.log("🚀 ~ file: reviewsController.js:146 ~ deleteReview ~ typeof newOverallRating:", typeof newOverallRating)
+  
+  freelancerObject.freelancerReviews = freelancerObject.freelancerReviews.filter(review => review.toString() !== reviewId.toString() )
+  console.log("🚀 ~ file: reviewsController.js:142 ~ deleteReview ~ freelancerObject.freelancerReviews:", freelancerObject.freelancerReviews)
 
-  freelancerObject.overallRating = newOverallRating
+  freelancerObject.overallRating = newOverallRating ? newOverallRating : null
+  console.log("🚀 ~ file: reviewsController.js:158 ~ deleteReview ~ freelancerObject.overallRating:", freelancerObject.overallRating)
   await freelancerObject.save()
 
   // Remove review from client's User.clientReview
   const clientObject = await User.findById(review.client).exec()
 
-  clientObject.clientReviews = clientObject.clientReviews.filter(review => review._id !== reviewId )
+  clientObject.clientReviews = clientObject.clientReviews.filter(review => review._id.toString() !== reviewId.toString() )
 
   await clientObject.save()
 
