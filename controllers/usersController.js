@@ -86,7 +86,20 @@ const updateUser = asyncHandler(async (req, res) => {
 
   const { id, ...otherProperties } = req.body
 
-  Object.assign(user, { ...user, ...otherProperties})
+  // transform skills string into array
+  let skills
+  console.log('req.body.skills', req.body.skills)
+  if (req.body.skills) {
+    skills = req.body.skills.split(',').map(skill => skill.trim());
+  }
+  
+  console.log("🚀 ~ file: usersController.js:93 ~ updateUser ~ skills:", skills)
+
+  if (skills) {
+    Object.assign(user, { ...user, ...otherProperties, skills})
+  } else {
+    Object.assign(user, { ...user, ...otherProperties})
+  }
 
   if (password) {
     user.password = await bcrypt.hash(password, 10)
