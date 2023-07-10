@@ -81,6 +81,7 @@ const seedData = async () => {
         title: 'Web Development Project',
         description: 'Build a responsive website for a small business.',
         client: thomas._id, // ID of the client user in the 'users' collection
+        clientUsername: thomas.username, // ID of the client user in the 'users' collection
         skills: ['HTML', 'CSS', 'JavaScript'],
         price: 1000,
         startDate: new Date('2023-07-01'),

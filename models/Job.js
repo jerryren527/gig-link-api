@@ -41,10 +41,9 @@ const jobSchema = new mongoose.Schema({
     type: String,
     default: 'Pending'
   },
-  proposals: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Proposal'
-  }],
+  proposals: {
+    type: [String],
+  },
   },
   {
     timestamps: true

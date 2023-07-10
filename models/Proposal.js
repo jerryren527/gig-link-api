@@ -4,6 +4,9 @@ const proposalSchema = new mongoose.Schema({
   freelancer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+  },
+  freelancerUsername: {
+    type: String,
     required: true,
   },
   title: {

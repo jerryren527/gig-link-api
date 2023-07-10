@@ -1,8 +1,9 @@
 const Job = require('../models/Job')
 const asyncHandler = require('express-async-handler')   // prevents us from using so many try-catch blocks when using asyn methods
 const bcrypt = require('bcrypt')
-const {JOB_STATUSES} = require('../config/constants')
+const {JOB_STATUSES, PROPOSAL_STATUSES} = require('../config/constants')
 const User = require('../models/User')
+const Proposal = require('../models/Proposal')
 
 
 // @desc Get all jobs
@@ -62,7 +63,7 @@ const createNewJob = asyncHandler(async (req, res) => {
 // @route PUT /jobs
 // @access Private
 const updateJob = asyncHandler(async (req, res) => {
-  const {jobId, title, description, skills, price, startDate, dueDate, status, newProposal } = req.body
+  const {jobId, title, description, skills, price, proposals, freelancerUsername, startDate, dueDate, status, } = req.body
   // console.log( {jobId, title, description, skills, price, startDate, dueDate, status, newProposal })
 
   if (!jobId || !title || !description || !price) {
@@ -92,13 +93,13 @@ const updateJob = asyncHandler(async (req, res) => {
     }
   }
 
-  let proposals = []
-  if (newProposal) {
-    proposals = [...job.proposals, newProposal]
-  }
+  // let proposals = []
+  // if (newProposal) {
+  //   proposals = [...job.proposals, newProposal]
+  // }
 
   const jobObject = {
-    title, description, skills, price, startDate, dueDate, status, proposals
+    title, description, skills, price, proposals, freelancerUsername, startDate, dueDate, status, 
   }
 
 
@@ -107,6 +108,24 @@ const updateJob = asyncHandler(async (req, res) => {
   if (duplicate && duplicate._id.toString() !== jobId) {
     return res.status(409).json({ message: "Duplicate job. "})
   }  
+
+  // If freelancerUsername is not empty string, set the proposal status to Accepted (User.proposal with matching jobId and freelancerUsername)
+  if (freelancerUsername) {
+    console.log('freelancerUsername defined:', freelancerUsername)
+    const proposal = await Proposal.findOne({ jobId, freelancerUsername}).exec()
+
+    if (!proposal) {
+      return res.status(404).json({ message: `Job (ID ${jobId}) does not have a proposal from ${freelancerUsername}.`})
+    }
+
+    proposal.status = PROPOSAL_STATUSES.Accepted
+    job.status = JOB_STATUSES.Accepted
+    // Add job to User.activejob
+    const acceptedFreelancer = await User.findOne({ username: freelancerUsername }).exec()
+    acceptedFreelancer.activeJobs = [...acceptedFreelancer.activeJobs, job]
+    await acceptedFreelancer.save()
+    await proposal.save()
+  }
 
   // Assign the updated job
   Object.assign(job, { ...job, ...jobObject})
@@ -143,8 +162,8 @@ const updateJobStatus = asyncHandler( async (req, res) => {
       return res.status(409).json({ message: `Job status Accepted cannot be changed to Pending.`})
     }
     // Guard for requests to explicitly check if Job.freelancer is defined. Should always be defined through interaction with Proposals or Requests.
-    if (!job.freelancer) {
-      return res.status(409).json({ message: `Job ${jobId}'s status cannot be updated because Job.freelancer is not defined.`})
+    if (!job.freelancerUsername) {
+      return res.status(409).json({ message: `Job ${jobId}'s status cannot be updated because Job.freelancerUsername is not defined.`})
     }
   }
   if (job.status === JOB_STATUSES.Completed || job.status === JOB_STATUSES.Cancelled) {

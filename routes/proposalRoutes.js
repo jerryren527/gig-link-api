@@ -1,11 +1,13 @@
 const express = require('express')
 const router = express.Router()
 const proposalsController = require('../controllers/proposalsController')
+const verifyJWT = require('../middlewares/verifyJWT')
+
+router.use(verifyJWT)
 
 router.route('/')
-  // .get(proposalsController.getAllProposals)
+  .get(proposalsController.getAllProposals)
   .post(proposalsController.createNewProposal)
-  // .patch(proposalsController.updateProposal) // freelancer cannot edit a proposal
   .delete(proposalsController.deleteProposal)
 
 

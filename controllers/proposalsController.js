@@ -7,25 +7,25 @@ const Job = require('../models/Job')
 // @desc Get all proposals
 // @route GET /proposals
 // @access Private
-// const getAllProposals = asyncHandler (async (req, res) => {
-//   const proposals = await Proposal.find().lean()
+const getAllProposals = asyncHandler (async (req, res) => {
+  const proposals = await Proposal.find().lean()
 
-//   if (!proposals?.length) {
-//     return res.status(400).json({ message: "No proposals found"})
-//   }
+  if (!proposals?.length) {
+    return res.status(400).json({ message: "No proposals found"})
+  }
 
-//   res.json(proposals)
-// })
+  res.json(proposals)
+})
 
 
 // @desc Create new proposal
 // @route POST /proposals
 // @access Private
 const createNewProposal = asyncHandler(async (req, res) => {
-  const {jobId, freelancer} = req.body
+  const {jobId, freelancerUsername} = req.body
 
-  if (!jobId ||  !freelancer  ) {
-    return res.status(400).json({ message: "JobId, and Freelancer are required."})
+  if (!jobId ||  !freelancerUsername  ) {
+    return res.status(400).json({ message: "JobId, and freelancerUsername are required."})
   }
 
   // Check that Job status is Pending (and not any other status)
@@ -35,10 +35,10 @@ const createNewProposal = asyncHandler(async (req, res) => {
   }
 
   // check for duplicate proposals
-  const duplicate = await Proposal.findOne({ freelancer: freelancer, jobId: jobId }).lean().exec()
+  const duplicate = await Proposal.findOne({ freelancerUsername: freelancerUsername, jobId: jobId }).lean().exec()
 
   if (duplicate) {
-    return res.status(409).json({ message: `Duplicate proposal. Freelancer ${freelancer} has already made a proposal to Job ${jobId}.`})
+    return res.status(409).json({ message: `Duplicate proposal. Freelancer ${freelancerUsername} has already made a proposal to Job ${jobId}.`})
   }
   
   // create proposal
@@ -47,7 +47,8 @@ const createNewProposal = asyncHandler(async (req, res) => {
 
   if (proposal) {
     // add proposal to User.proposals (as freelancer)
-    const freelancerObj = await User.findById(freelancer).exec()
+    // const freelancerObj = await User.findById(freelancer).exec()
+    const freelancerObj = await User.findOne({username: freelancerUsername}).exec()
     if (freelancerObj.role !== ROLES.Freelancer) {
       return res.status(409).json({ message: "Proposal must be made by a user with status freelancer."})
     }
@@ -57,7 +58,7 @@ const createNewProposal = asyncHandler(async (req, res) => {
   
     // add proposals to Job.proposals
     const jobObj = await Job.findById(jobId).exec()
-    jobObj.proposals = [...jobObj.proposals, proposal]
+    jobObj.proposals = [...jobObj.proposals, freelancerUsername]
     const updatedJobObj = await jobObj.save()
     console.log('updatedJobObj', updatedJobObj)
 
@@ -90,8 +91,10 @@ const changeProposalStatus = asyncHandler(async (req, res) => {
     const job = await Job.findById(proposal.jobId).exec()
     job.status = JOB_STATUSES.Accepted
     job.freelancer = proposal.freelancer
+    job.freelancerUsername = proposal.freelancerUsername
     
     const result = await User.updateOne({ _id: proposal.freelancer }, { $push: { activeJobs: job }})
+    console.log("🚀 ~ file: proposalsController.js:97 ~ changeProposalStatus ~ result:", result)
     
     if (result.modifiedCount === 0) {
       return res.status(204)
@@ -114,29 +117,39 @@ const changeProposalStatus = asyncHandler(async (req, res) => {
 // @route DELETE /proposals
 // @access Private
 const deleteProposal = asyncHandler(async (req, res) => {
-  const { proposalId } = req.body
+  const { jobId, freelancerUsername } = req.body
 
-  if (!proposalId) {
-    return req.status(400).json({ message: 'Proposal ID required.'})
+  if (!jobId || !freelancerUsername)  {
+    return res.status(400).json({ message: 'job ID and freelancerUsername required.'})
   }
 
-  const proposal = await Proposal.findById(proposalId).lean().exec()
+  const proposal = await Proposal.findOne({ jobId: jobId, freelancerUsername: freelancerUsername}).lean().exec()
 
   if (proposal) {
     // delete proposal ref in the User (freelancer)
     // updateMany() 1st arg is the filter condition. 2nd arg is the update object that defines the changes to be made.
+    // await User.updateMany(
+    //   { proposals: proposalId },
+    //   { $pull: { proposals: proposalId }}
+    // )
     await User.updateMany(
-      { proposals: proposalId },
-      { $pull: { proposals: proposalId }}
+      { username: freelancerUsername },
+      { $pull: { proposals: proposal._id }}
     )
     
     // delete proposal ref in the Job
+    // await Job.updateMany(
+    //   { proposals: proposalId },
+    //   { $pull: { proposals: proposalId }}
+    // )
+
+    // delete freelancer username from Job.proposals
     await Job.updateMany(
-      { proposals: proposalId },
-      { $pull: { proposals: proposalId }}
+      { _id: jobId },
+      { $pull: { proposals: freelancerUsername }}
     )
     
-    const result = await Proposal.deleteOne({ _id: proposalId })
+    const result = await Proposal.deleteOne({ _id: proposal._id })
   
     return res.json({message: `Proposal ${proposal._id} deleted`})
 
@@ -148,6 +161,7 @@ const deleteProposal = asyncHandler(async (req, res) => {
 
 
 module.exports = {
+  getAllProposals,
   createNewProposal,
   changeProposalStatus,
   deleteProposal

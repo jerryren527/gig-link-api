@@ -23,11 +23,11 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Proposal',
   }],
-  activeJobs: [{
+  activeJobs: [{  // freelancer
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Job',
   }],
-  openJobs: [{
+  openJobs: [{  // client
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Job',
   }],
