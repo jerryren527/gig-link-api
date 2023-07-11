@@ -113,12 +113,18 @@ const updateRequestStatus = asyncHandler(async (req, res) => {
   request.status = status
 
   let message = ''
+  const clientObj = await User.findById(request?.client)
+  console.log("🚀 ~ file: requestsController.js:117 ~ updateRequestStatus ~ clientObj:", clientObj)
+  const freelancerObj = await User.findById(request?.freelancer)
+  console.log("🚀 ~ file: requestsController.js:119 ~ updateRequestStatus ~ freelancerObj:", freelancerObj)
 
   if (status === REQUEST_STATUSES.Accepted) {
     // when client changes request status from Pending to Accepted, create a Job and add to client’s User.openJobs, and add to freelancer’s User.activeJobs.
     const jobObj = {
       client: request.client,
+      clientUsername: clientObj.username,
       freelancer: request.freelancer,
+      freelancerUsername: freelancerObj.username,
       title: request.title,
       description: request.description,
       skills: request.skills,
