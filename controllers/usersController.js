@@ -42,10 +42,11 @@ const createNewUser = asyncHandler(async (req, res) => {
   }
 
   // .exec() is executes the query and returns a promise. That why we use await
-  const duplicate = await User.findOne({ username }).lean().exec()
+  // User mongodb's .collation(). provideing { locale: "en", strength: 2 } apparently checks for case insensitivity, among other things. Therefore, 'Dave' and 'dave' will be allowed and map to just one user in the db.
+  const duplicate = await User.findOne({ username }).collation({ locale: 'en', strength: 2 }).lean().exec()
 
   if (duplicate) {
-    return res.json(409).json({ message: "Duplicate username."})
+    return res.status(400).json({ message: "Username taken!"})
   }
 
   const hashedPwd = await bcrypt.hash(password, 10)
