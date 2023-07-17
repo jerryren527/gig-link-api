@@ -1,6 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const jobsController = require('../controllers/jobsController')
+const verifyJWT = require('../middlewares/verifyJWT')
+
+router.use(verifyJWT)
 
 router.route('/')
   .get(jobsController.getAllJobs)
@@ -10,8 +13,5 @@ router.route('/')
 
 router.route('/status')
   .patch(jobsController.updateJobStatus)
-
-// router.route('/proposals')
-//   .patch(jobsController.addJobProposal)
 
 module.exports = router

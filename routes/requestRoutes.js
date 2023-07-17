@@ -1,6 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const requestsController = require('../controllers/requestsController')
+const verifyJWT = require('../middlewares/verifyJWT')
+
+router.use(verifyJWT)
 
 router.route('/')
   .get(requestsController.getAllRequests)

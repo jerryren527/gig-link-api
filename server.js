@@ -21,6 +21,10 @@ app.use(cookieParser())
 
 app.use('/', express.static(path.join(__dirname, 'public')))
 
+// Cache static assets for 1 day
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: 86400000 })); // Set maxAge to cache for 1 day
+
+
 app.use('/', require('./routes/root'))
 app.use('/users', require('./routes/userRoutes'))
 app.use('/jobs', require('./routes/jobRoutes'))
@@ -31,13 +35,18 @@ app.use('/proposals', require('./routes/proposalRoutes'))
 
 app.use('/auth', require('./routes/authRoutes'))
 
+
 app.all('*', (req, res) => {
+  console.log('hit me')
   res.status(404)
   if (req.accepts('html')) {
+    console.log('hit html!')
     res.sendFile(path.join(__dirname, 'views', '404.html'))
   } else if (req.accepts('json')) {
+    console.log('hit json!')
     res.json({ message: '404 Not Found' })
   } else {
+    console.log('hit text!')
     res.type('txt').send('404 Not Found')
   }
 })

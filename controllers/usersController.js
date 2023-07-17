@@ -89,9 +89,11 @@ const updateUser = asyncHandler(async (req, res) => {
 
   // transform skills string into array
   let skills
-  console.log('req.body.skills', req.body.skills)
-  if (req.body.skills) {
-    skills = req.body.skills.split(',').map(skill => skill.trim());
+  console.log('req.body.skills', req?.body?.skills)
+  if (req?.body?.skills.length > 0) {
+    console.log("🚀 ~ file: usersController.js:94 ~ updateUser ~ req?.body?.skills:", req?.body?.skills)
+    
+    skills = req?.body?.skills.split(',').map(skill => skill.trim());
   }
   
   console.log("🚀 ~ file: usersController.js:93 ~ updateUser ~ skills:", skills)

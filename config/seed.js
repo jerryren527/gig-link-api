@@ -1,4 +1,5 @@
 require('dotenv').config()
+const bcrypt = require('bcrypt');
 // Require dependencies and models
 const mongoose = require('mongoose');
 const User = require('../models/User')
@@ -25,47 +26,49 @@ const seedData = async () => {
       Review.deleteMany({}),
     ]);
 
+    const hashedPassword = await bcrypt.hash('123123', 10);
+    
     // Seed Users
     const users = [
       // User data objects
       {
         username: 'jerry.ren',
-        password: '123123',
+        password: hashedPassword,
         firstName: 'Jerry',
         lastName: 'Ren',
         role: 'Freelancer',
       },
       {
         username: 'kennis.kong',
-        password: '123123',
+        password: hashedPassword,
         firstName: 'Kennis',
         lastName: 'Kong',
         role: 'Freelancer',
       },
       {
         username: 'kevin.zhu',
-        password: '123123',
+        password: hashedPassword,
         firstName: 'Kevin',
         lastName: 'Zhu',
         role: 'Freelancer',
       },
       {
         username: 'thomas.chu',
-        password: '123123',
+        password: hashedPassword,
         firstName: 'Thomas',
         lastName: 'Chu',
         role: 'Client',
       },
       {
         username: 'qing.zhu',
-        password: '123123',
+        password: hashedPassword,
         firstName: 'Qing',
         lastName: 'Zhu',
         role: 'Client',
       },
       {
         username: 'kirkland.arjun',
-        password: '123123',
+        password: hashedPassword,
         firstName: 'Kirkland',
         lastName: 'Arjun',
         role: 'Client',
