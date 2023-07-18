@@ -32,63 +32,113 @@ const seedData = async () => {
     const users = [
       // User data objects
       {
-        username: 'jerry.ren',
+        username: 'john.doe',
         password: hashedPassword,
-        firstName: 'Jerry',
-        lastName: 'Ren',
+        firstName: 'John',
+        lastName: 'Doe',
         role: 'Freelancer',
       },
       {
-        username: 'kennis.kong',
+        username: 'jane.smith',
         password: hashedPassword,
-        firstName: 'Kennis',
-        lastName: 'Kong',
+        firstName: 'Jane',
+        lastName: 'Smith',
         role: 'Freelancer',
       },
       {
-        username: 'kevin.zhu',
+        username: 'michael.johnson',
         password: hashedPassword,
-        firstName: 'Kevin',
-        lastName: 'Zhu',
+        firstName: 'Michael',
+        lastName: 'Johnson',
         role: 'Freelancer',
       },
       {
-        username: 'thomas.chu',
+        username: 'david.wilson',
         password: hashedPassword,
-        firstName: 'Thomas',
-        lastName: 'Chu',
+        firstName: 'David',
+        lastName: 'Wilson',
         role: 'Client',
       },
       {
-        username: 'qing.zhu',
+        username: 'sarah.brown',
         password: hashedPassword,
-        firstName: 'Qing',
-        lastName: 'Zhu',
+        firstName: 'Sarah',
+        lastName: 'Brown',
         role: 'Client',
       },
       {
-        username: 'kirkland.arjun',
+        username: 'chris.taylor',
         password: hashedPassword,
-        firstName: 'Kirkland',
-        lastName: 'Arjun',
+        firstName: 'Chris',
+        lastName: 'Taylor',
         role: 'Client',
+      },
+      {
+        username: 'guest.client',
+        password: hashedPassword,
+        firstName: 'Guest',
+        lastName: 'Client',
+        role: 'Client',
+      },
+      {
+        username: 'guest.freelancer',
+        password: hashedPassword,
+        firstName: 'Guest',
+        lastName: 'Freelancer',
+        role: 'Freelancer',
+      },
+      {
+        username: 'guest.admin',
+        password: hashedPassword,
+        firstName: 'Guest',
+        lastName: 'Admin',
+        role: 'Admin',
       },
     ];
     await User.create(users);
 
-    const thomas = await User.findOne({ username: 'thomas.chu' }).exec()
+    const david = await User.findOne({ username: 'david.wilson' }).exec()
+    const sarah = await User.findOne({ username: 'sarah.brown' }).exec()
+    const chris = await User.findOne({ username: 'chris.taylor' }).exec()
+    const guestClient = await User.findOne({ username: 'guest.client' }).exec()
+    const guestFreelancer = await User.findOne({ username: 'guest.freelancer' }).exec()
+    const guestAdmin = await User.findOne({ username: 'guest.admin' }).exec()
 
     // Seed Jobs
     const jobs = [
       {
         title: 'Web Development Project',
         description: 'Build a responsive website for a small business.',
-        client: thomas._id, // ID of the client user in the 'users' collection
-        clientUsername: thomas.username, // ID of the client user in the 'users' collection
+        client: david._id, // ID of the client user in the 'users' collection
+        clientUsername: david.username, // ID of the client user in the 'users' collection
         skills: ['HTML', 'CSS', 'JavaScript'],
-        price: 1000,
-        startDate: new Date('2023-07-01'),
-        dueDate: new Date('2023-07-31'),
+        price: 100,
+        startDate: new Date(Date.now()),
+        dueDate: new Date(Date.now() + 100 * 60 * 60 * 24),
+        status: 'Pending',
+        proposals: [], // Array of proposal IDs
+      },
+      {
+        title: 'Graphic Design Project',
+        description: 'Create a logo and branding materials for a startup company.',
+        client: sarah._id, // ID of the client user in the 'users' collection
+        clientUsername: sarah.username, // Username of the client user in the 'users' collection
+        skills: ['Adobe Photoshop', 'Illustrator'],
+        price: 50,
+        startDate: new Date(Date.now() + 10 * 60 * 60 * 24),
+        dueDate: new Date(Date.now() + 30 * 60 * 60 * 24),
+        status: 'Pending',
+        proposals: [], // Array of proposal IDs
+      },
+      {
+        title: 'Mobile App Development',
+        description: 'Build a cross-platform mobile app for a fitness tracking application.',
+        client: guestClient._id, // ID of the client user in the 'users' collection
+        clientUsername: guestClient.username, // Username of the client user in the 'users' collection
+        skills: ['React Native', 'Firebase'],
+        price: 200,
+        startDate: new Date(Date.now() + 5 * 60 * 60 * 24),
+        dueDate: new Date(Date.now() + 60 * 60 * 24 * 30),
         status: 'Pending',
         proposals: [], // Array of proposal IDs
       },
@@ -96,43 +146,65 @@ const seedData = async () => {
     await Job.create(jobs);
 
     const job = await Job.findOne({ title: 'Web Development Project'}).exec()
-    thomas.openJobs = [...thomas.openJobs, job._id]
-    await thomas.save()
+    david.openJobs = [...david.openJobs, job._id]
+    await david.save()
 
-    const jerry = await User.findOne({ username: 'jerry.ren' }).exec()
-    const kirkland = await User.findOne({ username: 'kirkland.arjun' }).exec()
+    const john = await User.findOne({ username: 'john.doe' }).exec()
 
 
     const reviews = [
       {
-        client: thomas._id, // ID of the client user in the 'users' collection
-        freelancer: jerry._id, // ID of the freelancer user in the 'users' collection
-        review: 'Great experience working with this Jerry. Highly recommended!',
+        client: david._id, // ID of the client user in the 'users' collection
+        freelancer: john._id, // ID of the freelancer user in the 'users' collection
+        review: 'Great experience working with him! Highly recommended!',
         rating: 5,
       },
       {
-        client: kirkland._id, // ID of the client user in the 'users' collection
-        freelancer: jerry._id, // ID of the freelancer user in the 'users' collection
-        review: "He's aii",
+        client: sarah._id, // ID of the client user in the 'users' collection
+        freelancer: john._id, // ID of the freelancer user in the 'users' collection
+        review: "His service was satisfactory. Met my requirements.",
         rating: 3,
+      },
+      {
+        client: chris._id, // ID of the client user in the 'users' collection
+        freelancer: guestFreelancer._id, // ID of the freelancer user in the 'users' collection
+        review: "GuestFreelancer did an excellent job on the project. Very professional.",
+        rating: 4,
+      },
+      {
+        client: guestClient._id, // ID of the client user in the 'users' collection
+        freelancer: guestFreelancer._id, // ID of the freelancer user in the 'users' collection
+        review: "GuestFreelancer did a poor job on the project. Also did not meet the deadline.",
+        rating: 2,
       },
     ]
 
     await Review.create(reviews);
 
-    const thomasReview = await Review.findOne({ client: thomas._id }).exec()
-    const kirklandReview = await Review.findOne({ client: kirkland._id }).exec()
+    const davidReview = await Review.findOne({ client: david._id }).exec()
+    const sarahReview = await Review.findOne({ client: sarah._id }).exec()
+    const chrisReview = await Review.findOne({ client: chris._id }).exec()
+    const guestClientReview = await Review.findOne({ client: guestClient._id }).exec()
 
     // add review ref to Jerry's User.freelancerReviews
-    jerry.freelancerReviews = [...jerry.freelancerReviews, thomasReview._id, kirklandReview._id]
-    jerry.overallRating = 4
-    await jerry.save()
+    john.freelancerReviews = [...john.freelancerReviews, davidReview._id, sarahReview._id]
+    john.overallRating = 4
+    guestFreelancer.freelancerReviews = [...guestFreelancer.freelancerReviews, chrisReview._id, guestClientReview._id]
+    guestFreelancer.overallRating = 3
+    await john.save()
+    await guestFreelancer.save()
     // add review ref to Thomas's User.clientReviews
-    thomas.clientReviews = [...thomas.clientReviews, thomasReview._id]
-    await thomas.save()
+    david.clientReviews = [...david.clientReviews, davidReview._id]
+    await david.save()
     // add review ref to Kirkland's User.clientReviews
-    kirkland.clientReviews = [...kirkland.clientReviews, kirklandReview._id]
-    await kirkland.save()
+    sarah.clientReviews = [...sarah.clientReviews, sarahReview._id]
+    await sarah.save()
+    
+    chris.clientReviews = [...chris.clientReviews, chrisReview._id]
+    await chris.save()
+    
+    guestClient.clientReviews = [...guestClient.clientReviews, guestClientReview._id]
+    await guestClient.save()
 
 
     console.log('Seed data inserted successfully.');
