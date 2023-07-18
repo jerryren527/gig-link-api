@@ -35,7 +35,6 @@ const createNewRequest = asyncHandler(async (req, res) => {
     return res.status(409).json({ message: `User with ID ${client} has role ${clientObject.role}. Only clients can create requests.`})
   }
 
-  // check for duplicate requests
   const duplicate = await Request.findOne({ client: client, freelancer: freelancer, title: title, description: description, price: price }).lean().exec()
 
   if (duplicate) {
@@ -45,10 +44,8 @@ const createNewRequest = asyncHandler(async (req, res) => {
   const request = await Request.create(req.body)
 
   if (request) {
-    // add request to client's User.postedRequests
     await User.updateOne({ _id: client}, { $push: { postedRequests: request }})
     
-    // add request to freelancer's User.receivedRequests
     await User.updateOne({ _id: freelancer}, { $push: { receivedRequests: request }})
 
     return res.status(201).json({ message: `New request \'${title}\' (ID: ${request._id}) created.`})
@@ -114,9 +111,7 @@ const updateRequestStatus = asyncHandler(async (req, res) => {
 
   let message = ''
   const clientObj = await User.findById(request?.client)
-  console.log("🚀 ~ file: requestsController.js:117 ~ updateRequestStatus ~ clientObj:", clientObj)
   const freelancerObj = await User.findById(request?.freelancer)
-  console.log("🚀 ~ file: requestsController.js:119 ~ updateRequestStatus ~ freelancerObj:", freelancerObj)
 
   if (status === REQUEST_STATUSES.Accepted) {
     // when client changes request status from Pending to Accepted, create a Job and add to client’s User.openJobs, and add to freelancer’s User.activeJobs.

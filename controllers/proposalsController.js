@@ -28,39 +28,31 @@ const createNewProposal = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "JobId, and freelancerUsername are required."})
   }
 
-  // Check that Job status is Pending (and not any other status)
   const job = await Job.findById(jobId).lean().exec()
   if (job.status !== JOB_STATUSES.Pending) {
     return res.status(409).json({ message: `Cannot add a proposal to Job (ID ${job._id}) with status ${job.status}. A proposal can only be added to jobs with status Pending.`})
   }
 
-  // check for duplicate proposals
   const duplicate = await Proposal.findOne({ freelancerUsername: freelancerUsername, jobId: jobId }).lean().exec()
 
   if (duplicate) {
     return res.status(409).json({ message: `Duplicate proposal. Freelancer ${freelancerUsername} has already made a proposal to Job ${jobId}.`})
   }
   
-  // create proposal
   const proposal = await Proposal.create(req.body)
   console.log('proposal', proposal)
 
   if (proposal) {
-    // add proposal to User.proposals (as freelancer)
-    // const freelancerObj = await User.findById(freelancer).exec()
     const freelancerObj = await User.findOne({username: freelancerUsername}).exec()
     if (freelancerObj.role !== ROLES.Freelancer) {
       return res.status(409).json({ message: "Proposal must be made by a user with status freelancer."})
     }
     freelancerObj.proposals = [...freelancerObj.proposals, proposal]
     const updatedFreelancerObj = await freelancerObj.save()
-    console.log('updatedFreelancerObj', updatedFreelancerObj)
   
-    // add proposals to Job.proposals
     const jobObj = await Job.findById(jobId).exec()
     jobObj.proposals = [...jobObj.proposals, freelancerUsername]
     const updatedJobObj = await jobObj.save()
-    console.log('updatedJobObj', updatedJobObj)
 
     return res.status(201).json({ message: `New proposal (ID ${proposal._id}) for job ${jobObj._id} created.`})
   } else {
@@ -75,7 +67,6 @@ const createNewProposal = asyncHandler(async (req, res) => {
 const changeProposalStatus = asyncHandler(async (req, res) => {
   const { proposalId, status } = req.body
 
-  // find proposal, change status.
   const proposal = await Proposal.findById(proposalId).exec()
 
   if (proposal.status === PROPOSAL_STATUSES.Accepted || proposal.status === PROPOSAL_STATUSES.Declined) {
@@ -86,7 +77,7 @@ const changeProposalStatus = asyncHandler(async (req, res) => {
   
 
   const message = []
-  // If proposal status changed to Accepted, then change Job's status to Accepted, add freelancer property to job, and add freelancer to freelancer's User.activeJobs
+
   if (status === PROPOSAL_STATUSES.Accepted) {
     const job = await Job.findById(proposal.jobId).exec()
     job.status = JOB_STATUSES.Accepted
@@ -94,7 +85,6 @@ const changeProposalStatus = asyncHandler(async (req, res) => {
     job.freelancerUsername = proposal.freelancerUsername
     
     const result = await User.updateOne({ _id: proposal.freelancer }, { $push: { activeJobs: job }})
-    console.log("🚀 ~ file: proposalsController.js:97 ~ changeProposalStatus ~ result:", result)
     
     if (result.modifiedCount === 0) {
       return res.status(204)
@@ -126,24 +116,11 @@ const deleteProposal = asyncHandler(async (req, res) => {
   const proposal = await Proposal.findOne({ jobId: jobId, freelancerUsername: freelancerUsername}).lean().exec()
 
   if (proposal) {
-    // delete proposal ref in the User (freelancer)
-    // updateMany() 1st arg is the filter condition. 2nd arg is the update object that defines the changes to be made.
-    // await User.updateMany(
-    //   { proposals: proposalId },
-    //   { $pull: { proposals: proposalId }}
-    // )
     await User.updateMany(
       { username: freelancerUsername },
       { $pull: { proposals: proposal._id }}
     )
-    
-    // delete proposal ref in the Job
-    // await Job.updateMany(
-    //   { proposals: proposalId },
-    //   { $pull: { proposals: proposalId }}
-    // )
 
-    // delete freelancer username from Job.proposals
     await Job.updateMany(
       { _id: jobId },
       { $pull: { proposals: freelancerUsername }}

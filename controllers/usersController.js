@@ -41,8 +41,6 @@ const createNewUser = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Username, Password, and Role are required."})
   }
 
-  // .exec() is executes the query and returns a promise. That why we use await
-  // User mongodb's .collation(). provideing { locale: "en", strength: 2 } apparently checks for case insensitivity, among other things. Therefore, 'Dave' and 'dave' will be allowed and map to just one user in the db.
   const duplicate = await User.findOne({ username }).collation({ locale: 'en', strength: 2 }).lean().exec()
 
   if (duplicate) {
@@ -72,7 +70,6 @@ const updateUser = asyncHandler(async (req, res) => {
     res.status(400).json({ message: 'Username and role are required.'})
   }
 
-  // no .lean() here because we want access to .save() method.
   const user = await User.findById(req.body.id).exec()
 
   if (!user) {
@@ -96,7 +93,6 @@ const updateUser = asyncHandler(async (req, res) => {
     skills = req?.body?.skills.split(',').map(skill => skill.trim());
   }
   
-  console.log("🚀 ~ file: usersController.js:93 ~ updateUser ~ skills:", skills)
 
   if (skills) {
     Object.assign(user, { ...user, ...otherProperties, skills})
@@ -119,8 +115,6 @@ const updateUser = asyncHandler(async (req, res) => {
 const deleteMessage = asyncHandler(async (req, res) => {
   const { userId, messageId } = req.body
 
-  // check if message is a sent message or a received message
-  // const user = await User.findById(userId).exec()
   const message = await Message.findById(messageId).exec()
   let result
   let messageType

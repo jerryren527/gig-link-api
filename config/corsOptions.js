@@ -1,5 +1,6 @@
 const allowedOrigins = [
-  'https://gig-link.onrender.com'
+    'https://gig-link.onrender.com',
+    // 'http://localhost:5173',
 ]
 
 const corsOptions = {

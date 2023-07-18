@@ -28,7 +28,6 @@ const createNewReview = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Client, Freelancer, Review, Rating are required."})    
   }
 
-  // Make sure that client has role client, and freelancer has role freelancer
   const clientObject = await User.findById(client).lean().exec()
   const freelancerObject = await User.findById(freelancer).lean().exec()
 
@@ -36,7 +35,6 @@ const createNewReview = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Client must be the reviewer, and Freelancer must be the reviewee."})
   }
 
-  // check if client has reviewed the freelancer once before
   const duplicate = await Review.findOne({ client: client, freelancer: freelancer }).lean().exec()
 
   if (duplicate) {
@@ -54,17 +52,11 @@ const createNewReview = asyncHandler(async (req, res) => {
     
     const prevOverallRating = freelancerObject.overallRating ? freelancerObject.overallRating : 0
     const newOverallRating = ((prevOverallRating * Number(numOfFreelancerReviews)) + Number(rating)) / (Number(numOfFreelancerReviews) + 1)
-    console.log("🚀 ~ file: reviewsController.js:56 ~ createNewReview ~ numOfFreelancerReviews:", numOfFreelancerReviews)
-    console.log("🚀 ~ file: reviewsController.js:56 ~ createNewReview ~ rating:", rating)
-    console.log("🚀 ~ file: reviewsController.js:56 ~ createNewReview ~ numOfFreelancerReviews:", numOfFreelancerReviews)
-    console.log("🚀 ~ file: reviewsController.js:55 ~ createNewReview ~ newOverallRating:", newOverallRating)
     
     freelancerObject.overallRating = newOverallRating
 
     await freelancerObject.save()
-    // await User.updateOne({ _id: freelancer}, { $push: { freelancerReviews: createdReview }})
     
-    // Add createdReview to the client's to User.clientReviews 
     await User.updateOne({ _id: client }, { $push: { clientReviews: createdReview }})
 
     return res.status(201).json({ message: `New review for \'${freelancer}\' created.`})
@@ -92,8 +84,6 @@ const updateReview = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Review not found.'})
   }
   
-  
-  
   // If rating was chaged, then freelancer's overallRating must change.
   const prevRating = reviewObject.rating
   if (prevRating !== rating) {
@@ -106,7 +96,6 @@ const updateReview = asyncHandler(async (req, res) => {
   }
 
   // Assign the updated job
-  // Object.assign(reviewObject, { ...reviewObject, ...otherProperties})
   reviewObject.review = review
   reviewObject.rating = rating
   const updatedReview = await reviewObject.save()
@@ -136,12 +125,10 @@ const deleteReview = asyncHandler(async (req, res) => {
 
   // Remove review from freelancer's User.freelancerReview
   const freelancerObject = await User.findById(review.freelancer).exec()
-  console.log("🚀 ~ file: reviewsController.js:139 ~ deleteReview ~ freelancerObject:", freelancerObject)
 
   
   // Update freelancer's User.overallRating
   const numOfRatings = freelancerObject.freelancerReviews.length
-  console.log("🚀 ~ file: reviewsController.js:146 ~ deleteReview ~ numOfRatings:", numOfRatings)
   const overallRating = freelancerObject.overallRating ? +freelancerObject.overallRating : 0
   let newOverallRating
   if (numOfRatings === 1) {
@@ -149,14 +136,9 @@ const deleteReview = asyncHandler(async (req, res) => {
   } else {
     newOverallRating = ( overallRating * numOfRatings - review.rating ) / (numOfRatings - 1)
   }
-  console.log("🚀 ~ file: reviewsController.js:146 ~ deleteReview ~ newOverallRating:", newOverallRating)
-  console.log("🚀 ~ file: reviewsController.js:146 ~ deleteReview ~ typeof newOverallRating:", typeof newOverallRating)
-  
   freelancerObject.freelancerReviews = freelancerObject.freelancerReviews.filter(review => review.toString() !== reviewId.toString() )
-  console.log("🚀 ~ file: reviewsController.js:142 ~ deleteReview ~ freelancerObject.freelancerReviews:", freelancerObject.freelancerReviews)
 
   freelancerObject.overallRating = newOverallRating ? newOverallRating : null
-  console.log("🚀 ~ file: reviewsController.js:158 ~ deleteReview ~ freelancerObject.overallRating:", freelancerObject.overallRating)
   await freelancerObject.save()
 
   // Remove review from client's User.clientReview

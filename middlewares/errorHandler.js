@@ -8,7 +8,6 @@ const errorHandler = (err, req, res, next) => {
 
     res.status(status)
 
-    // RTK Query requires isError flag to handle some errors properly.
     res.json({ message: err.message, isError: true })
 }
 

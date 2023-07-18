@@ -50,7 +50,6 @@ const createNewJob = asyncHandler(async (req, res) => {
   const job = await Job.create(jobObject)
 
   if (job) {
-    // add job to client's User.openJobs
     await User.updateOne({ username: clientUsername }, { $push: { openJobs: job }})
 
     res.status(201).json({ message: `New job \'${title}\' created.`})
@@ -64,13 +63,11 @@ const createNewJob = asyncHandler(async (req, res) => {
 // @access Private
 const updateJob = asyncHandler(async (req, res) => {
   const {jobId, title, description, skills, price, proposals, freelancerUsername, startDate, dueDate, status, } = req.body
-  // console.log( {jobId, title, description, skills, price, startDate, dueDate, status, newProposal })
 
   if (!jobId || !title || !description || !price) {
     res.status(400).json({ message: "JobId, Title, Description, and Price are required."})
   }
 
-  // no .lean() here because we want access to .save() method.
   const job = await Job.findById(jobId).exec()
 
   if (!job) {
@@ -93,10 +90,6 @@ const updateJob = asyncHandler(async (req, res) => {
     }
   }
 
-  // let proposals = []
-  // if (newProposal) {
-  //   proposals = [...job.proposals, newProposal]
-  // }
 
   const jobObject = {
     title, description, skills, price, proposals, freelancerUsername, startDate, dueDate, status, 
@@ -109,7 +102,6 @@ const updateJob = asyncHandler(async (req, res) => {
     return res.status(409).json({ message: "Duplicate job. "})
   }  
 
-  // If freelancerUsername is not empty string, set the proposal status to Accepted (User.proposal with matching jobId and freelancerUsername)
   if (freelancerUsername) {
     console.log('freelancerUsername defined:', freelancerUsername)
     const proposal = await Proposal.findOne({ jobId, freelancerUsername}).exec()
@@ -120,7 +112,6 @@ const updateJob = asyncHandler(async (req, res) => {
 
     proposal.status = PROPOSAL_STATUSES.Accepted
     job.status = JOB_STATUSES.Accepted
-    // Add job to User.activejob
     const acceptedFreelancer = await User.findOne({ username: freelancerUsername }).exec()
     acceptedFreelancer.activeJobs = [...acceptedFreelancer.activeJobs, job]
     await acceptedFreelancer.save()
@@ -147,20 +138,11 @@ const updateJobStatus = asyncHandler( async (req, res) => {
     return res.status(404).json({ messsage: `Job Id ${jobId} is not found.`})
   }
 
-  // Removed because a job's status will only change from Pending to Accepted through interaction with Proposals or Requests
-  // pending -> accepted only. 
-  // if (job.status === JOB_STATUSES.Pending) {
-  //   if (status !== JOB_STATUSES.Accepted || status !== JOB_STATUSES.Cancelled) {
-  //     return res.status(409).json({ message: `Job status Pending can only be changed to Accepted or Cancelled.`})
-  //   }
-  // }
-
-  // accepted -> completed or cancelled only 
-  // cannot change to pending
   if (job.status === JOB_STATUSES.Accepted) {
     if (status === JOB_STATUSES.Pending) {
       return res.status(409).json({ message: `Job status Accepted cannot be changed to Pending.`})
     }
+    
     // Guard for requests to explicitly check if Job.freelancer is defined. Should always be defined through interaction with Proposals or Requests.
     if (!job.freelancerUsername) {
       return res.status(409).json({ message: `Job ${jobId}'s status cannot be updated because Job.freelancerUsername is not defined.`})
@@ -176,21 +158,6 @@ const updateJobStatus = asyncHandler( async (req, res) => {
 
   return res.status(200).json({ message: `Job Id ${jobId} found and updated from ${prevStatus} to ${status}`})
 })
-
-// // @desc Add proposal to job
-// // @route PATCH /jobs/proposal
-// // @access Private
-// const addJobProposal = asyncHandler( async (req, res) => {
-//   const { jobId, proposalId } = req.body
-
-//   const result = await Job.updateOne({ _id: jobId }, { $push: { proposals: proposalId }})
-
-//   if (result.modifiedCount === 0) {
-//     return res.status(204)
-//   } 
-
-//   return res.status(200).json({ message: `Proposal ${proposalId} was added to Job ${jobId}'s`})
-// })
 
 // @desc Delete a job
 // @route DELETE /jobs
@@ -219,6 +186,5 @@ module.exports = {
   createNewJob,
   updateJob,
   updateJobStatus,
-  // addJobProposal,
   deleteJob
 }

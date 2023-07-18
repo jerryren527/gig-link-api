@@ -37,16 +37,12 @@ app.use('/auth', require('./routes/authRoutes'))
 
 
 app.all('*', (req, res) => {
-  console.log('hit me')
   res.status(404)
   if (req.accepts('html')) {
-    console.log('hit html!')
     res.sendFile(path.join(__dirname, 'views', '404.html'))
   } else if (req.accepts('json')) {
-    console.log('hit json!')
     res.json({ message: '404 Not Found' })
   } else {
-    console.log('hit text!')
     res.type('txt').send('404 Not Found')
   }
 })
